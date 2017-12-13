@@ -1,0 +1,42 @@
+FROM ubuntu:16.04
+
+RUN apt-get -y update
+
+# prerequisites
+RUN apt-get -y install gawk wget git-core diffstat unzip texinfo gcc-multilib \
+     build-essential chrpath socat cpio python python3 python3-pip python3-pexpect \
+     xz-utils debianutils iputils-ping libsdl1.2-dev xterm
+
+# bitbake needs UTF-8 locales set
+RUN apt-get install locales
+RUN locale-gen en_US.UTF-8
+RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+ENV LANG en_US.UTF-8
+
+# tools
+RUN apt-get -y install sudo curl vim tmux
+
+# repo tool
+RUN curl https://storage.googleapis.com/git-repo-downloads/repo > /usr/bin/repo
+RUN chmod a+x /usr/bin/repo
+
+RUN useradd -ms /bin/bash builder
+RUN echo 'builder:builder' | chpasswd
+RUN adduser builder sudo
+USER builder
+WORKDIR /home/builder
+
+RUN git config --global user.email "dp@dp.com"
+RUN git config --global user.name "Daniel Pleskac"
+RUN git config --global color.ui true
+
+# yocto repo
+RUN git clone -b morty git://git.yoctoproject.org/poky.git
+WORKDIR poky
+
+RUN mkdir fsl-release-bsp
+WORKDIR fsl-release-bsp
+RUN repo init -u git://git.freescale.com/imx/fsl-arm-yocto-bsp.git -b imx-morty
+RUN repo sync
+
+CMD exec /bin/bash

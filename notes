@@ -1,0 +1,9 @@
+docker build -t imx-bld-server -f Dockerfile-imx-bld-server .
+docker run -v /dev/net/tun:/dev/net/tun -ti imx-bld-server
+
+DISTRO=fsl-imx-x11 MACHINE=imx6qsabresd source fsl-setup-release.sh -b build-x11
+bitbake core-image-minimal
+runqemu tmp/deploy/images/imx6qsabresd/zImage tmp/deploy/images/imx6qsabresd/core-image-minimal-imx6qsabresd
+
+bitbake fsl-image-validation-imx
+
