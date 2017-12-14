@@ -2,10 +2,19 @@ FROM ubuntu:16.04
 
 RUN apt-get -y update
 
-# prerequisites
+# generic yocto prerequisites
 RUN apt-get -y install gawk wget git-core diffstat unzip texinfo gcc-multilib \
      build-essential chrpath socat cpio python python3 python3-pip python3-pexpect \
      xz-utils debianutils iputils-ping libsdl1.2-dev xterm
+
+# iMX yocto prerequisites
+RUN apt-get -y install sed cvs subversion coreutils texi2html \
+     docbook-utils python-pysqlite2 help2man make gcc g++ desktop-file-utils \
+     libgl1-mesa-dev libglu1-mesa-dev mercurial autoconf automake groff curl lzop asciidoc \
+     u-boot-tools
+
+# QEMU prerequisites
+RUN apt-get -y install iptables
 
 # bitbake needs UTF-8 locales set
 RUN apt-get install locales
@@ -14,7 +23,7 @@ RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 ENV LANG en_US.UTF-8
 
 # tools
-RUN apt-get -y install sudo curl vim tmux
+RUN apt-get -y install sudo vim tmux
 
 # repo tool
 RUN curl https://storage.googleapis.com/git-repo-downloads/repo > /usr/bin/repo
@@ -26,17 +35,17 @@ RUN adduser builder sudo
 USER builder
 WORKDIR /home/builder
 
-RUN git config --global user.email "dp@dp.com"
-RUN git config --global user.name "Daniel Pleskac"
+RUN git config --global user.email "user@site.com"
+RUN git config --global user.name "User"
 RUN git config --global color.ui true
 
-# yocto repo
-RUN git clone -b morty git://git.yoctoproject.org/poky.git
-WORKDIR poky
-
+# pull repos
 RUN mkdir fsl-release-bsp
 WORKDIR fsl-release-bsp
 RUN repo init -u git://git.freescale.com/imx/fsl-arm-yocto-bsp.git -b imx-morty
 RUN repo sync
+
+# accept EULA
+RUN sed -e 's/^# Handle EULA setting/echo \"ACCEPT_FSL_EULA = \\\"1\\\"\" >> conf\/local.conf/g' -i setup-environment
 
 CMD exec /bin/bash
