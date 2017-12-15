@@ -48,4 +48,6 @@ RUN repo sync
 # accept EULA
 RUN sed -e 's/^# Handle EULA setting/echo \"ACCEPT_FSL_EULA = \\\"1\\\"\" >> conf\/local.conf/g' -i setup-environment
 
+ADD notes /home/builder/notes
+
 CMD exec /bin/bash

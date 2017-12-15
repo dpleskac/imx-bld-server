@@ -1,9 +1,32 @@
+#
+# build server image
+#
 docker build -t imx-bld-server -f Dockerfile-imx-bld-server .
-docker run -v /dev/net/tun:/dev/net/tun -ti imx-bld-server
 
+#
+# run server
+#
+docker run -ti --rm imx-bld-server
+
+# setup server environment
 DISTRO=fsl-imx-x11 MACHINE=imx6qsabresd source fsl-setup-release.sh -b build-x11
-bitbake core-image-minimal
-runqemu tmp/deploy/images/imx6qsabresd/zImage tmp/deploy/images/imx6qsabresd/core-image-minimal-imx6qsabresd
 
+#
+# build imx images
+#
+# Note: ubuntu 16.04 needs to build u-boot before fsl-image-validation-imx,
+#	    perhaps related to https://patchwork.ozlabs.org/patch/744927/
+bitbake u-boot-imx &&
 bitbake fsl-image-validation-imx
 
+OR
+
+bitbake core-image-minimal
+
+
+#
+# TODO - QEMU not working yet
+#
+docker run -v /dev/net/tun:/dev/net/tun --privileged -ti imx-bld-server
+bitbake qemu-helper-native
+runqemu tmp/deploy/images/imx6qsabresd/zImage tmp/deploy/images/imx6qsabresd/core-image-minimal-imx6qsabresd*.ext4
